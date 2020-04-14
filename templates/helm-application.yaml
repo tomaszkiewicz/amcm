@@ -17,9 +17,11 @@ metadata:
 spec:
   project: {{ .cluster.name }}
   source:
+{{- $namespace := $name }}
 {{- $addon := index .app "addon" }}
 {{- if $addon }}
-{{- $addonSettings := data.YAML (file.Read (printf "addons/%s.yaml" $addon)) }}
+    {{- $addonSettings := data.YAML (file.Read (printf "addons/%s.yaml" $addon)) }}
+    {{- $namespace = index $addonSettings "namespace" }}
     repoURL: {{ $addonSettings.repoURL }}
     path: {{ $addonSettings.path }}
     {{- $targetRevision := index $addonSettings "targetRevision" }}
@@ -33,29 +35,36 @@ spec:
       {{- end }}
       releaseName: {{ $releaseName }}
       {{- $parameters := index .app "parameters" }}
-      {{- if $parameters -}}
+      {{- if $parameters }}
       parameters:
       {{- range $key, $value := $parameters }}
       - name: {{ $key }}
         value: {{ $value }}
       {{- end }}
       {{- end }}
-      {{- $values := $addonSettings.values | data.ToYAML }}
-      {{- $settings := index .app "settings" }}
-      {{- if $settings }}
-        {{- range $key, $value := $settings }}
-          {{- $values = regexp.Replace (printf "%s%s" "%SETTINGS_" $key) $value $values }}
+      {{- if (index $addonSettings "values") }}
+        {{- $values := $addonSettings.values | data.ToYAML }}
+        {{- $settings := index .app "settings" }}
+        {{- if $settings }}
+          {{- range $key, $value := $settings }}
+            {{- $values = regexp.Replace (printf "%s%s" "%SETTINGS_" $key) $value $values }}
+          {{- end }}
         {{- end }}
+      values: | {{ "\n" }}
+        {{- $values | indent 8 }}
       {{- end }}
-      values: |
-{{ $values | indent 8 }}
+{{- else }}
+    repoURL: {{ .cluster.repoURL }}
+    path: {{ .app.chartPath }}
+    helm:
+      valueFiles:
+      {{ .app.valueFiles | data.ToYAML }}
+{{- end }}
   destination:
     server: {{ .cluster.server }}
-    {{- $namespace := index $addonSettings "namespace" }}
     {{- if not $namespace }}
       {{- $namespace = $name }}
     {{- end }}
     namespace: {{ $namespace }}
-{{- end }}
 ---
 {{- end }}

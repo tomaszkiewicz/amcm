@@ -2,6 +2,7 @@
 {{ tmpl.Inline (file.Read (printf "%s/templates/helm-application.yaml" (ds "templates"))) . }}
 {{ tmpl.Inline (file.Read (printf "%s/templates/kustomize-application.yaml" (ds "templates"))) . }}
 {{ tmpl.Inline (file.Read (printf "%s/templates/argocd-project.yaml" (ds "templates"))) . }}
+{{ tmpl.Inline (file.Read (printf "%s/templates/objects-generator.yaml" (ds "templates"))) . }}
 
 {{- range (file.ReadDir "clusters") }}
   {{- $clusterConfigFile := printf "clusters/%s/cluster.yaml" . }}
@@ -9,9 +10,11 @@
 # Detected cluster in {{.}}{{ "\n" }}
     {{- $settings := data.YAML (file.Read $clusterConfigFile) }}
 # Cluster name: {{ $settings.cluster.name }}{{ "\n" }}
+
 # BEGIN argocd projects
         {{ template "argocdProject" (dict "cluster" $settings.cluster) }}
 # END argocd projects
+
 # BEGIN helm applications
     {{- $helmApplications := index $settings "helmApplications" }}
     {{- if $helmApplications }}
@@ -20,6 +23,7 @@
       {{- end }}
     {{- end }}
 # END helm applications
+
 # BEGIN kustomize applications
     {{- $kustomizeApplications := index $settings "kustomizeApplications" }}
     {{- if $kustomizeApplications }}
@@ -28,5 +32,9 @@
       {{- end }}
     {{- end }}
 # END kustomize applications
+
+# BEGIN objects generator
+  {{ template "objectsGenerator" $settings }}
+# END objects generator
   {{- end }}
 {{- end}}
