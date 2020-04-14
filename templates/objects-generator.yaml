@@ -1,0 +1,42 @@
+{{- define "objectsGenerator" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: amcm-objects-generator-{{ .cluster.name }}
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ .cluster.name }}
+  source:
+    repoURL: https://tomaszkiewicz.github.io/amcm-objects-generator/
+    path: /
+    helm:
+      releaseName: amcm-objects-generator
+      values: |
+        namespaces:
+      {{- $helmApplications := index . "helmApplications" }}
+      {{- if $helmApplications }}
+        {{- range $helmApplications }}
+          {{- $name := index . "name" }}
+          {{- if and (not $name) (index . "addon") }}
+          {{- $name = .addon }}
+          {{- end }}
+          {{- $addon := index . "addon" }}
+          {{- if $addon }}
+              {{- $addonSettings := data.YAML (file.Read (printf "addons/%s.yaml" $addon)) }}
+              {{- $namespace := index $addonSettings "namespace" }}
+              {{- if not $namespace }}
+                {{- $namespace = $name }}
+              {{- end }}
+              {{- if and (ne $namespace "default") (ne $namespace "kube-system") }}
+          - name: {{ $namespace }}
+              {{- end }}
+          {{- else }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+  destination:
+    server: {{ .cluster.server }}
+    namespace: kube-system
+{{- end }}
