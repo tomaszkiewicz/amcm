@@ -17,19 +17,26 @@ metadata:
 spec:
   project: {{ .cluster.name }}
   source:
-{{- $namespace := $name }}
-{{- $addon := index .app "addon" }}
-{{- if $addon }}
-    {{- $addonSettings := data.YAML (file.Read (printf "addons/%s.yaml" $addon)) }}
-    {{- $namespace = index $addonSettings "namespace" }}
-    repoURL: {{ $addonSettings.repoURL }}
-    path: {{ $addonSettings.path }}
-    {{- $targetRevision := index $addonSettings "targetRevision" }}
+    {{- $namespace := $name }}
+    {{- $appSettings := .app }}
+    {{- $addon := index .app "addon" }}
+    {{- if $addon }}
+      {{- $appSettings = data.YAML (file.Read (printf "addons/%s.yaml" $addon)) }}
+    {{- end }}
+    {{- $namespace = index $appSettings "namespace" }}
+    {{- $repoURL := index $appSettings "repoURL" }}
+    {{- if not $repoURL }}
+    {{- $repoUrl = index .cluster "repoURL" }}
+    {{- end }}
+    {{/* TODO add fallback to global repoURL */}}
+    repoURL: {{ $repoURL }}
+    path: {{ $appSettings.path }}
+    {{- $targetRevision := index $appSettings "targetRevision" }}
     {{- if $targetRevision }}
     targetRevision: {{ $targetRevision }}
     {{- end }}
     helm:
-      {{- $releaseName := index $addonSettings "releaseName" }}
+      {{- $releaseName := index $appSettings "releaseName" }}
       {{- if not $releaseName }}
       {{- $releaseName = $name }}
       {{- end }}
@@ -42,8 +49,8 @@ spec:
         value: {{ $value }}
       {{- end }}
       {{- end }}
-      {{- if (index $addonSettings "values") }}
-        {{- $values := $addonSettings.values | data.ToYAML }}
+      {{- if (index $appSettings "values") }}
+        {{- $values := $appSettings.values | data.ToYAML }}
         {{- $settings := index .app "settings" }}
         {{- if $settings }}
           {{- range $key, $value := $settings }}
@@ -53,17 +60,11 @@ spec:
       values: | {{ "\n" }}
         {{- $values | indent 8 }}
       {{- end }}
-{{- else }}
-    repoURL: {{ .cluster.repoURL }}
-    path: {{ .app.chartPath }}
-    {{- $targetRevision := index .app "targetRevision" }}
-    {{- if $targetRevision }}
-    targetRevision: {{ $targetRevision }}
-    {{- end }}
-    helm:
+      {{- $valueFiles := index $appSettings "valueFiles" }}
+      {{- if $valueFiles }}
       valueFiles:
-      {{ .app.valueFiles | data.ToYAML }}
-{{- end }}
+      {{ $valueFiles | data.ToYAML }}
+      {{- end }}
   destination:
     server: {{ .cluster.server }}
     {{- if not $namespace }}
