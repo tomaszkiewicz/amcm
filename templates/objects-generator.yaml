@@ -10,7 +10,7 @@ spec:
   project: {{ .cluster.name }}
   source:
     repoURL: https://tomaszkiewicz.github.io/amcm-objects-generator/
-    path: /
+    path: amcm-objects-generator
     helm:
       releaseName: amcm-objects-generator
       values: |

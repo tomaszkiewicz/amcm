@@ -56,6 +56,10 @@ spec:
 {{- else }}
     repoURL: {{ .cluster.repoURL }}
     path: {{ .app.chartPath }}
+    {{- $targetRevision := index .app "targetRevision" }}
+    {{- if $targetRevision }}
+    targetRevision: {{ $targetRevision }}
+    {{- end }}
     helm:
       valueFiles:
       {{ .app.valueFiles | data.ToYAML }}

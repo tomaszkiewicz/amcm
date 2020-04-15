@@ -1,6 +1,11 @@
 #!/bin/sh
 
-cwd=$(dirname $0)
 
-echo -n $cwd | gomplate -f $cwd/templates/main.yaml -d templates=stdin:
+export BASE_PATH=$(dirname $0)
+export REPO_PATH=$(pwd)
+export REPO_URL=$(git config --get remote.origin.url)
 
+gomplate -f $BASE_PATH/templates/main.yaml \
+  -d basePath=env:BASE_PATH \
+  -d repoPath=env:REPO_PATH \
+  -d repoUrl=env:REPO_URL

@@ -1,40 +1,44 @@
-{{- $templatesDir := (datasource "templates") }}
-{{ tmpl.Inline (file.Read (printf "%s/templates/helm-application.yaml" (ds "templates"))) . }}
-{{ tmpl.Inline (file.Read (printf "%s/templates/kustomize-application.yaml" (ds "templates"))) . }}
-{{ tmpl.Inline (file.Read (printf "%s/templates/argocd-project.yaml" (ds "templates"))) . }}
-{{ tmpl.Inline (file.Read (printf "%s/templates/objects-generator.yaml" (ds "templates"))) . }}
+{{- $basePath := ds "basePath" }}
+{{- $repoPath := ds "repoPath" }}
+
+{{ tmpl.Inline (file.Read (printf "%s/templates/helm-application.yaml" $basePath)) . }}
+{{ tmpl.Inline (file.Read (printf "%s/templates/kustomize-application.yaml" $basePath)) . }}
+{{ tmpl.Inline (file.Read (printf "%s/templates/argocd-project.yaml" $basePath)) . }}
+{{ tmpl.Inline (file.Read (printf "%s/templates/objects-generator.yaml" $basePath)) . }}
 
 {{- range (file.ReadDir "clusters") }}
   {{- $clusterConfigFile := printf "clusters/%s/cluster.yaml" . }}
   {{- if file.Exists $clusterConfigFile }}
+    {{- $clusterPath := printf "%s/clusters/%s" $repoPath . }}
+    {{- $paths := dict "base" $basePath "repo" $repoPath "cluster" $clusterPath }}
 # Detected cluster in {{.}}{{ "\n" }}
     {{- $settings := data.YAML (file.Read $clusterConfigFile) }}
 # Cluster name: {{ $settings.cluster.name }}{{ "\n" }}
 
-# BEGIN argocd projects
+# BEGIN argocd projects{{ "\n" }}
         {{ template "argocdProject" (dict "cluster" $settings.cluster) }}
-# END argocd projects
+# END argocd projects{{ "\n" }}
 
-# BEGIN helm applications
+# BEGIN helm applications{{ "\n" }}
     {{- $helmApplications := index $settings "helmApplications" }}
     {{- if $helmApplications }}
       {{- range $helmApplications }}
-        {{ template "helmApplication" (dict "cluster" $settings.cluster "app" .) }}
+        {{ template "helmApplication" (dict "cluster" $settings.cluster "app" . "paths" $paths) }}
       {{- end }}
     {{- end }}
-# END helm applications
+# END helm applications{{ "\n" }}
 
-# BEGIN kustomize applications
+# BEGIN kustomize applications{{ "\n" }}
     {{- $kustomizeApplications := index $settings "kustomizeApplications" }}
     {{- if $kustomizeApplications }}
       {{- range $kustomizeApplications }}
-        {{- template "kustomizeApplication" (dict "cluster" $settings.cluster "app" .) }}
+        {{- template "kustomizeApplication" (dict "cluster" $settings.cluster "app" . "paths" $paths) }}
       {{- end }}
     {{- end }}
-# END kustomize applications
+# END kustomize applications{{ "\n" }}
 
-# BEGIN objects generator
+# BEGIN objects generator{{ "\n" }}
   {{ template "objectsGenerator" $settings }}
-# END objects generator
+# END objects generator{{ "\n" }}
   {{- end }}
 {{- end}}
