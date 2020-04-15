@@ -40,7 +40,7 @@
 # END kustomize applications{{ "\n" }}
 
 # BEGIN objects generator{{ "\n" }}
-  {{ template "objectsGenerator" $settings }}
+    {{ template "objectsGenerator" $settings }}
 # END objects generator{{ "\n" }}
   {{- end }}
 {{- end}}
