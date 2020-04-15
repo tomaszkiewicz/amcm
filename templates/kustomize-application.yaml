@@ -23,8 +23,8 @@ spec:
   destination:
     server: {{ .cluster.server }}
     namespace: default
-    {{- $disableAutoSync := index .app "disableAutoSync" }}
-    {{- $clusterDisableAutoSync := index .cluster "disableAutoSync" }}
+{{- $disableAutoSync := index .app "disableAutoSync" }}
+{{- $clusterDisableAutoSync := index .cluster "disableAutoSync" }}
 {{- if or $disableAutoSync $clusterDisableAutoSync }}
 {{- else }}
   syncPolicy:

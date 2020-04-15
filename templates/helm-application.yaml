@@ -20,15 +20,24 @@ spec:
     {{- $namespace := $name }}
     {{- $appSettings := .app }}
     {{- $addon := index .app "addon" }}
-    {{- if $addon }}
-      {{- $appSettings = data.YAML (file.Read (printf "addons/%s.yaml" $addon)) }}
+    {{- $addonFile := index .app "addonFile" }}
+    {{- if or $addon $addonFile }}
+      {{- if not $addonFile }}
+      {{- $addonFile = printf "addons/%s.yaml" $addon }}
+      {{- end }}
+      {{- $addonFile = regexp.Replace "$CLUSTER" .paths.cluster $addonFile }}
+      {{- $addonFile = regexp.Replace "$REPO" .paths.repo $addonFile }}
+      {{- $addonFile = regexp.Replace "$BASE" .paths.base $addonFile }}
+      {{- $appSettings = data.YAML (file.Read $addonFile) }}
     {{- end }}
     {{- $namespace = index $appSettings "namespace" }}
     {{- $repoURL := index $appSettings "repoURL" }}
     {{- if not $repoURL }}
-    {{- $repoUrl = index .cluster "repoURL" }}
+    {{- $repoURL = index .cluster "repoURL" }}
     {{- end }}
-    {{/* TODO add fallback to global repoURL */}}
+    {{- if not $repoURL }}
+    {{- $repoURL = index . "repoURL" }}
+    {{- end }}
     repoURL: {{ $repoURL }}
     path: {{ $appSettings.path }}
     {{- $targetRevision := index $appSettings "targetRevision" }}
@@ -71,5 +80,14 @@ spec:
       {{- $namespace = $name }}
     {{- end }}
     namespace: {{ $namespace }}
+{{- $disableAutoSync := index .app "disableAutoSync" }}
+{{- $clusterDisableAutoSync := index .cluster "disableAutoSync" }}
+{{- if or $disableAutoSync $clusterDisableAutoSync }}
+{{- else }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+{{- end }}
 ---
 {{- end }}

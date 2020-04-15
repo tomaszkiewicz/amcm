@@ -1,6 +1,8 @@
 {{- $basePath := ds "basePath" }}
 {{- $repoPath := ds "repoPath" }}
 
+{{- $repoURL := ds "repoUrl" }}
+
 {{ tmpl.Inline (file.Read (printf "%s/templates/helm-application.yaml" $basePath)) . }}
 {{ tmpl.Inline (file.Read (printf "%s/templates/kustomize-application.yaml" $basePath)) . }}
 {{ tmpl.Inline (file.Read (printf "%s/templates/argocd-project.yaml" $basePath)) . }}
@@ -16,14 +18,14 @@
 # Cluster name: {{ $settings.cluster.name }}{{ "\n" }}
 
 # BEGIN argocd projects{{ "\n" }}
-        {{ template "argocdProject" (dict "cluster" $settings.cluster) }}
+    {{ template "argocdProject" (dict "cluster" $settings.cluster) }}
 # END argocd projects{{ "\n" }}
 
 # BEGIN helm applications{{ "\n" }}
     {{- $helmApplications := index $settings "helmApplications" }}
     {{- if $helmApplications }}
       {{- range $helmApplications }}
-        {{ template "helmApplication" (dict "cluster" $settings.cluster "app" . "paths" $paths) }}
+        {{ template "helmApplication" (dict "cluster" $settings.cluster "app" . "paths" $paths "repoURL" $repoURL) }}
       {{- end }}
     {{- end }}
 # END helm applications{{ "\n" }}

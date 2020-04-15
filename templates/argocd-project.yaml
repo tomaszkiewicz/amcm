@@ -10,8 +10,13 @@ spec:
     kind: '*'
   destinations:
   - namespace: '*'
-    server: '*'
+    server: {{ .cluster.server }}
   sourceRepos:
   - '*'
+  {{- $projectRoles := index .cluster "projectRoles" }}
+  {{- if $projectRoles }}
+  roles:{{ "\n" }}
+  {{- $projectRoles | data.ToYAML | indent 2 }}
+  {{- end }}
 ---
 {{- end }}
