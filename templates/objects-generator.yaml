@@ -1,4 +1,5 @@
 {{- define "objectsGenerator" }}
+{{- $paths := .paths -}}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -23,15 +24,22 @@ spec:
           {{- $name = .addon }}
           {{- end }}
           {{- $addon := index . "addon" }}
-          {{- if $addon }}
-              {{- $addonSettings := data.YAML (file.Read (printf "addons/%s.yaml" $addon)) }}
-              {{- $namespace := index $addonSettings "namespace" }}
-              {{- if not $namespace }}
-                {{- $namespace = $name }}
-              {{- end }}
-              {{- if and (ne $namespace "default") (ne $namespace "kube-system") }}
+          {{- $addonFile := index . "addonFile" }}
+          {{- if or $addon $addonFile }}
+            {{- if not $addonFile }}
+            {{- $addonFile = printf "addons/%s.yaml" $addon }}
+            {{- end }}
+            {{- $addonFile = regexp.Replace "\\$CLUSTER" $paths.cluster $addonFile }}
+            {{- $addonFile = regexp.Replace "\\$REPO" $paths.repo $addonFile }}
+            {{- $addonFile = regexp.Replace "\\$BASE" $paths.base $addonFile }}
+            {{- $addonSettings := data.YAML (file.Read $addonFile) }}
+            {{- $namespace := index $addonSettings "namespace" }}
+            {{- if not $namespace }}
+              {{- $namespace = $name }}
+            {{- end }}
+            {{- if and (ne $namespace "default") (ne $namespace "kube-system") }}
           - name: {{ $namespace }}
-              {{- end }}
+            {{- end }}
           {{- else }}
           {{- end }}
         {{- end }}

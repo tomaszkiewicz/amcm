@@ -1,8 +1,17 @@
 #!/bin/sh
 
-cwd=$(dirname $0)
+cd $(dirname $0)
 
-cd $cwd
+echo "==> Updating amcm"
 
-git checkout -- .
 git pull
+
+echo "==> Updating addons"
+
+if [ -e addons ]
+then
+  cd addons
+  git pull
+else
+  git clone https://github.com/tomaszkiewicz/amcm-addons.git addons
+fi

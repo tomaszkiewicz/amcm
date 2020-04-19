@@ -13,13 +13,19 @@ metadata:
 spec:
   project: {{ .cluster.name }}
   source:
-  {{- $repoUrl := index .app "repoURL" }}
-  {{- $clusterRepoUrl := index .cluster "repoURL" }}
-  {{- if and (not $repoUrl) $clusterRepoUrl }}
-  {{- $repoUrl = $clusterRepoUrl }}
-  {{- end }}
-    repoURL: {{ $repoUrl }}
-    path: {{ .app.path }}
+    {{- $repoURL := index .app "repoURL" }}
+    {{- if not $repoURL }}
+    {{- $repoURL = index .cluster "repoURL" }}
+    {{- end }}
+    {{- if not $repoURL }}
+    {{- $repoURL = index . "repoURL" }}
+    {{- end }}
+    repoURL: {{ $repoURL }}
+    {{- $path := printf "addons/%s" .app.name }}
+    {{- if index .app "path" }}
+    {{- $path = .app.path }}
+    {{- end }}
+    path: {{ $path }}
   destination:
     server: {{ .cluster.server }}
     namespace: default

@@ -25,9 +25,9 @@ spec:
       {{- if not $addonFile }}
       {{- $addonFile = printf "addons/%s.yaml" $addon }}
       {{- end }}
-      {{- $addonFile = regexp.Replace "$CLUSTER" .paths.cluster $addonFile }}
-      {{- $addonFile = regexp.Replace "$REPO" .paths.repo $addonFile }}
-      {{- $addonFile = regexp.Replace "$BASE" .paths.base $addonFile }}
+      {{- $addonFile = regexp.Replace "\\$CLUSTER" .paths.cluster $addonFile }}
+      {{- $addonFile = regexp.Replace "\\$REPO" .paths.repo $addonFile }}
+      {{- $addonFile = regexp.Replace "\\$BASE" .paths.base $addonFile }}
       {{- $appSettings = data.YAML (file.Read $addonFile) }}
     {{- end }}
     {{- $namespace = index $appSettings "namespace" }}

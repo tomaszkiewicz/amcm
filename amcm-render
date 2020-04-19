@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 export BASE_PATH=$(dirname $0)
 export REPO_PATH=$(pwd)
 export REPO_URL=$(git config --get remote.origin.url)

@@ -34,13 +34,13 @@
     {{- $kustomizeApplications := index $settings "kustomizeApplications" }}
     {{- if $kustomizeApplications }}
       {{- range $kustomizeApplications }}
-        {{- template "kustomizeApplication" (dict "cluster" $settings.cluster "app" . "paths" $paths) }}
+        {{- template "kustomizeApplication" (dict "cluster" $settings.cluster "app" . "paths" $paths "repoURL" $repoURL) }}
       {{- end }}
     {{- end }}
 # END kustomize applications{{ "\n" }}
 
 # BEGIN objects generator{{ "\n" }}
-    {{ template "objectsGenerator" $settings }}
+    {{ template "objectsGenerator" (dict "cluster" $settings.cluster "helmApplications" $settings.helmApplications "paths" $paths "repoURL" $repoURL) }}
 # END objects generator{{ "\n" }}
   {{- end }}
 {{- end}}
